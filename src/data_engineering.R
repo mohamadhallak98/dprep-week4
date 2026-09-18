@@ -32,6 +32,13 @@ creator_example <- video_view %>%
     ) %>%
   arrange(desc(impressions_total))
 
+# Example of left & inner joins
+video_with_creators <- video_view %>%
+  left_join(creators, by = "creator_id")
+
+watched_only <- impressions %>%
+  inner_join(watch_events, by = "impression_id")
+
 # -------------------------------------------------------------------------------
 # Exercise 1: Creating new features & writing the outputs to new csv files 
 video_features <- video_view %>%
@@ -75,12 +82,48 @@ engagement_by_band <- video_features %>%
 write_csv(creator_summary, "temp/creator_summary.csv")
 write_csv(engagement_by_band, "temp/engagement_by_band.csv")
 
-# Exercise 3
+# ---------------------------------------------------------------------
+# Exercise 3: joining tables: 
+video_enriched <- video_features %>%
+  left_join(videos, by = c("video_id", "creator_id")) %>%
+  left_join(creators, by = "creator_id") %>%
+    select(
+      video_id, creator_id, creator_name,
+      impressions_n, watch_rate, watch_rate_rank,
+      quality, posting_rate, publish_time
+    )
 
+user_enriched <- user_view %>%
+  left_join(users, by = "user_id", suffix = c("", "_users")) %>%
+  select(
+    user_id, user_name, user_handle,
+    impressions_n, watched_n, watch_rate,
+    like_n, follow_n, baseline_login, satiation_decay
+  )
 
+write_csv(video_enriched, "temp/video_enriched.csv")
+write_csv(user_enriched, "temp/user_enriched.csv")
+# ---------------------------------------------------------------------------
+# Exercise 4: Joining tables: 
+watch_log <- impressions %>%
+  left_join(watch_events, by = "impression_id", suffix = c("", "_event")) %>%
+  left_join(sessions, by = c("session_id", "user_id"), suffix = c("", "_session")) %>%
+  left_join(videos, by = c("video_id", "creator_id"), suffix = c("", "_video")) %>%
+  left_join(creators, by = "creator_id", suffix = c("", "_creator"))
 
-# Exercise 4
+watched_only <- impressions %>%
+  inner_join(watch_events, by = "impression_id")
 
+creator_event_summary <- watch_log %>%
+  group_by(creator_id) %>%
+  summarise(
+    impressions_n = n(),
+    watched_events_n = sum(!is.na(action)),
+    watch_seconds_total = sum(watch_seconds, na.rm = TRUE)
+  )
 
+write_csv(watch_log, "temp/watch_log.csv")
+write_csv(creator_event_summary, "temp/creator_event_summary.csv")
 
+# ---------------------------------------------------------------------------
 # Exercise 5
