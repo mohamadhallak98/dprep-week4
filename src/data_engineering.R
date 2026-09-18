@@ -39,6 +39,27 @@ video_with_creators <- video_view %>%
 watched_only <- impressions %>%
   inner_join(watch_events, by = "impression_id")
 
+# Example of converting into date and time 
+watch_time_preview <- watch_log %>%
+  mutate(
+    shown_ts = as.POSIXct(shown_at,
+      format = "%Y-%m-%dT%H:%M:%SZ",
+      tz = "UTC"),
+    shown_day = as.Date(shown_ts)
+  ) %>%
+  select(impression_id, creator_id, shown_at, shown_ts, shown_day) %>%
+  head(8)
+
+# Example of daily lag tables
+creator_daily <- watch_log %>%
+  mutate(
+    shown_ts = as.POSIXct(shown_at, format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+    shown_day = as.Date(shown_ts)
+  ) %>%
+  count(creator_id, shown_day, name = "impressions_n") %>%
+  arrange(creator_id, shown_day) %>%
+  group_by(creator_id) %>%
+  mutate(impressions_lag1 = lag(impressions_n))
 # -------------------------------------------------------------------------------
 # Exercise 1: Creating new features & writing the outputs to new csv files 
 video_features <- video_view %>%
@@ -126,4 +147,21 @@ write_csv(watch_log, "temp/watch_log.csv")
 write_csv(creator_event_summary, "temp/creator_event_summary.csv")
 
 # ---------------------------------------------------------------------------
-# Exercise 5
+# Exercise 5: Lag tables: 
+creator_daily <- watch_log %>%
+  mutate(
+    shown_ts = as.POSIXct(shown_at, format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+    shown_day = as.Date(shown_ts)
+  ) %>%
+  count(creator_id, shown_day, name = "impressions_n")
+
+creator_daily <- creator_daily %>%
+  group_by(creator_id) %>%
+  arrange(shown_day) %>%
+  mutate(
+    impressions_lag1 = lag(impressions_n),
+    impressions_change = impressions_n - impressions_lag1
+  )
+
+write_csv(creator_daily, "temp/creator_daily_week4.csv")
+
