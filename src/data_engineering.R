@@ -1,5 +1,4 @@
 # Load the data
-
 library(tidyverse)
 video_view <- read_csv("data/video_view.csv")
 user_view <- read_csv("data/user_view.csv")
@@ -10,7 +9,7 @@ impressions <- read_csv("data/impressions.csv")
 watch_events <- read_csv("data/watch_events.csv")
 sessions <- read_csv("data/sessions.csv")
 
-# Creating new columns & removing duplicates
+# Example of creating new columns & removing duplicates
 video_simple <- video_view %>%
   mutate(
     watch_rate_rank = rank(-watch_rate),
@@ -18,14 +17,23 @@ video_simple <- video_view %>%
   ) %>%
   distinct(video_id, .keep_all = TRUE)
 
-# Using advanced ranks 
+# Example of using advanced ranks 
 video_ranked <- video_view %>%
 mutate(
 watch_rate_rank = rank(-watch_rate, na.last = "keep",
 ties.method = "min"))
 
+# Example of aggregation
+creator_example <- video_view %>%
+  group_by(creator_id) %>%
+    summarise(
+      impressions_total = sum(impressions_n, na.rm = TRUE),
+      avg_watch_rate = mean(watch_rate, na.rm = TRUE)
+    ) %>%
+  arrange(desc(impressions_total))
 
-# Exercise 1
+# -------------------------------------------------------------------------------
+# Exercise 1: Creating new features & writing the outputs to new csv files 
 video_features <- video_view %>%
   mutate(
     watch_rate_rank = rank(-watch_rate),
@@ -44,9 +52,28 @@ video_features %>%
   select(video_id, creator_id, impressions_n, watch_rate, watch_rate_rank) %>%
   slice_head(n = 10)
 
-# Exercise 2
+# -------------------------------------------------------------------------------
+# Exercise 2: Creating aggregated tables 
+creator_summary <- video_features %>%
+  group_by(creator_id) %>%
+  summarise(
+    videos_n = n(),
+    impressions_total = sum(impressions_n, na.rm = TRUE),
+    watched_total = sum(watched_n, na.rm = TRUE),
+    avg_watch_rate = mean(watch_rate, na.rm = TRUE),
+    median_watch_seconds = median(total_watch_seconds, na.rm = TRUE)
+) %>%
+arrange(desc(impressions_total))
 
+engagement_by_band <- video_features %>%
+  group_by(reach_band) %>%
+  summarise(
+    videos_n = n(),
+    avg_watch_rate = mean(watch_rate, na.rm = TRUE)
+  )
 
+write_csv(creator_summary, "temp/creator_summary.csv")
+write_csv(engagement_by_band, "temp/engagement_by_band.csv")
 
 # Exercise 3
 
