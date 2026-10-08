@@ -9,6 +9,10 @@ impressions <- read_csv("data/impressions.csv")
 watch_events <- read_csv("data/watch_events.csv")
 sessions <- read_csv("data/sessions.csv")
 
+video_view %>%
+  select(video_id, creator_id, impressions_n, watched_n, watch_rate, avg_watch_share) %>%
+         head(6)
+
 # Example of creating new columns & removing duplicates
 video_simple <- video_view %>%
   mutate(
@@ -76,6 +80,7 @@ distinct(video_id, .keep_all = TRUE) %>%
 arrange(watch_rate_rank)
 
 write_csv(video_features, "temp/video_features.csv")
+
 video_features %>%
   select(video_id, creator_id, impressions_n, watch_rate, watch_rate_rank) %>%
   slice_head(n = 10)
