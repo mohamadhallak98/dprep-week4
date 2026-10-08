@@ -16,4 +16,4 @@ creator_week4 <- video_view %>%
     avg_watch_rate = mean(watch_rate, na.rm = TRUE) 
   )
 # 3. Output
-write_csv(creator_week4, "temp/creator_week4.csv")
+write_csv(creator_week4, "temp/creators_week4.csv")
